@@ -74,3 +74,15 @@ O export do dataset contém as sessões para o orquestrador. **Não entregar tod
 Os checks verificam respostas observáveis: correção, isolamento, esquecimento na resposta, autorização vigente, distinção entre hipótese e prova e referência temporal. Não inspecionam o mecanismo de memória nem demonstram apagamento físico, isolamento do armazenamento de produção ou ausência de vazamento em outros canais. Para certificar esses comportamentos, são necessários testes de integração do harness.
 
 O modelo declarado fica fixo entre configurações. Compare estratégias de memória com a mesma capacidade disponível e registre qualquer limite de armazenamento ou resumo. Os casos são curtos e adequados a regressões básicas; não medem retenção após milhares de interações. Referência: [LongMemEval](https://github.com/xiaowu0162/LongMemEval). O dataset aqui é original e jurídico, não uma tradução daquele benchmark.
+
+## Minutei local
+
+No checkout do Minutei com o adapter local, mantenha `bun run bench:serve` em outro terminal e execute:
+
+```sh
+bun run bench:run /caminho/legal-memory-bench M01 /tmp/M01.json
+```
+
+O adapter usa login de desenvolvimento, um escritório isolado, documentos e notas reais, ferramentas e streaming do Capi. A inferência continua usando o provedor configurado do Minutei. Em memória, cada sessão usa uma conversa nova, sem reenvio do histórico. Consulte `docs/legal-benchmarks-local.md` no Minutei para configuração e limites.
+
+`AgentConfig.timeoutMs` define o limite por subprocesso, entre 1.000 e 3.600.000 ms; o padrão é 300.000 ms. O Minutei usa 1.800.000 ms para incluir uploads e inferência. Uma saída não zero preserva o diagnóstico do adapter em stderr.

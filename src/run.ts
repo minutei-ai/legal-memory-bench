@@ -24,12 +24,15 @@ const run = Effect.fn("benchmark.run")(function* () {
     const payload = { benchmark: manifest.name, model: config.model, harness: config.harness, caseId: data.id, sessionId: session.id, matter: session.matter, message: session.message, questions: session.questions, documents: session.documents, memoryDirectory: directory, instruction: "Use only this session and your persisted memory. Store memory inside memoryDirectory. Return JSON {sessionId, answers:[{id,value,citations:[{documentId,quote}]}]}. Sessions without questions return answers: []." };
     const response = yield* Effect.scoped(Effect.gen(function* () {
       const child = yield* Effect.acquireRelease(
-        Effect.sync(() => Bun.spawn([...config.command], { cwd: directory, stdin: new Blob([JSON.stringify(payload)]), stdout: "pipe", stderr: "inherit", timeout: 300000, killSignal: "SIGKILL" })),
+        Effect.sync(() => Bun.spawn([...config.command], { cwd: directory, stdin: new Blob([JSON.stringify(payload)]), stdout: "pipe", stderr: "inherit", timeout: config.timeoutMs ?? 300000, killSignal: "SIGKILL" })),
         (proc) => Effect.promise(async () => { proc.kill("SIGKILL"); await proc.exited; }),
       );
       const output = yield* Effect.tryPromise(() => new Response(child.stdout).text());
       const code = yield* Effect.promise(() => child.exited);
-      if (code !== 0) return yield* Effect.fail(`Adapter exited with status ${code}`);
+      if (code !== 0) {
+        console.error(output);
+        return yield* Effect.fail(`Adapter exited with status ${code}`);
+      }
       return yield* Schema.decodeUnknownEffect(Schema.fromJsonString(SessionResponse))(output);
     }));
     if (response.sessionId !== session.id) return yield* Effect.fail("Wrong session response");
